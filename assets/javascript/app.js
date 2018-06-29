@@ -24,6 +24,10 @@ $(document).ready(function () {
         let timeInput = $("#time-input").val().trim();
         let freeInput = $("#free-input").val().trim();
 
+        //current time
+        let currentTime = moment();
+        console.log("CURRENT TIME: " + moment(currentTime).format("HH:mm"));
+
         // Local "filler" object for train data
         let newTrain = {
             name: trainName,
@@ -36,49 +40,60 @@ $(document).ready(function () {
         database.ref().push(newTrain);
 
         // Console log for all data
-        console.log(newTrain.name);
-        console.log(newTrain.destination);
-        console.log(newTrain.time);
-        console.log(newTrain.frequency);
+        //console.log(newTrain.name);
+        //console.log(newTrain.destination);
+        //console.log(newTrain.time);
+        //console.log(newTrain.frequency);
 
         // Alert
         alert("Train successfully added");
 
         // Clear text-boxes
-        $("train-name-input").val("");
+        $("#train-name-input").val("");
         $("#dest-input").val("");
-        $("time-input").val("");
-        $("free-input").val("");
+        $("#time-input").val("");
+        $("#free-input").val("");
     });
 
     // Firebase event to add train to table from form
-    database.ref().on("child_added", function (childSnapshot, prevChildKey) {
-        console.log(childSnapshot.val());
+    $(document).ready(function () {
+        // All code comes here 
+        database.ref().on("child_added", function (childSnapshot, prevChildKey) {
+            //console.log(childSnapshot.val());
 
-        // Store everything 
-        let trainName = childSnapshot.val().name;
-        let destInput = childSnapshot.val().destination;
-        let timeInput = childSnapshot.val().time;
-        let freeInput = childSnapshot.val().frequency;
+            // Store everything 
+            let trainName = childSnapshot.val().name;
+            let destInput = childSnapshot.val().destination;
+            let timeInput = parseInt(childSnapshot.val().time);
+            let freeInput = parseInt(childSnapshot.val().frequency);
 
-        // Train
-        console.log(trainName);
-        console.log(destInput);
-        console.log(timeInput);
-        console.log(freeInput);
+            // Train
+            //console.log(trainName);
+            //console.log(destInput);
+            //console.log(timeInput);
+            //console.log(freeInput);
 
-        // Train Time
-        let trainTimePretty = moment.unix(timeInput).format("HH:mm");
+            // Train time
+            let trainTime = parseInt(moment.unix(timeInput).format("HH:mm"));
+            //console.log(typeof trainTime);
 
-        // Calculate the total time for the train
-        let trainHours = moment().diff(moment(timeInput, "X"), "hours");
-        console.log(trainHours);
+            // Calculate the total time for the train
+            let trainMinutes = moment().diff(moment(trainTime), "minutes");
+            //console.log(trainMinutes);
 
-        // Calculate the frequency
-        let trainFreq = trainHours * freeInput;
-        console.log(trainFreq);
+            // Time apart
+            let trainRemain = trainMinutes % freeInput;
 
-        // Add each train's data into the table
-        $("#train-table > tbody").append("<tr><td>" + trainName + "</td><td>" + destInput + "</td><td>" + trainTimePretty + "</td><td>" + trainHours + "</td><td>" + freeInput + "</td><td>" + trainFreq + "</td><tr>");
-    })
+            // Minutes until arrival
+            //console.log(freeInput, trainRemain);
+            let minUntil = freeInput - trainRemain;
+            //console.log(minUntil);
+
+            // Next arrival time
+            let nextArrival = moment().add(minUntil, "minutes").format('HH:mm');
+
+            // Add each train's data into the table
+            $("#train-table > tbody").append("<tr><td>" + trainName + "</td><td>" + destInput + "</td><td>" + freeInput + "</td><td>" + nextArrival + "</td><td>" + minUntil + "</td></tr>");
+        })
+    });
 })
